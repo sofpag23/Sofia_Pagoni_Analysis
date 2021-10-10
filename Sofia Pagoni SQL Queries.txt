@@ -1,0 +1,53 @@
+--Daily evolution of unique sessions (slide 3)
+SELECT date, variation_name, count(distinct session_id) as  no_sessions 
+FROM `product-analytics-test.pa_dataset.experiment_data_10395400658`
+group by date, variation_name
+order by date, variation_name
+
+
+
+--Daily evolution of events (slides 4, 5)
+SELECT date, variation_name, event_name, sum(events) as  no_events 
+FROM `product-analytics-test.pa_dataset.experiment_data_10395400658`
+group by date, variation_name, event_name
+order by date, variation_name, event_name
+
+--Review of source and medium (slide 7)
+SELECT variation_name, source, medium, count(distinct session_id) as  no_unq_sessions
+FROM `product-analytics-test.pa_dataset.experiment_data_10395400658`
+group by date, variation_name, source, medium
+
+
+--Total actions per event name and medium (slides 8, 9)
+SELECT variation_name, event_name, medium, sum(events) as no_events
+FROM `product-analytics-test.pa_dataset.experiment_data_10395400658`
+group by variation_name, event_name, medium
+
+
+--Visit & Revisit Types Evaluation (slides 11, 12)
+SELECT variation_name, event_name, visitType, sum(events) as no_events
+FROM `product-analytics-test.pa_dataset.experiment_data_10395400658`
+group by variation_name, event_name, visitType
+
+
+--Average Events per Session - Top 1000 Sessions included (slide 18)
+SELECT variation_name, event_name, avg(no_events) as avg_events
+FROM 
+(
+    SELECT variation_name, session_id, event_name, sum(events) as no_events
+    FROM `product-analytics-test.pa_dataset.experiment_data_10395400658`
+    where session_id in 
+    (
+    SELECT distinct session_id FROM
+        (
+        SELECT variation_name, session_id, sum(events) as no_events
+        FROM `product-analytics-test.pa_dataset.experiment_data_10395400658`
+        group by variation_name, session_id
+        order by sum(events) desc
+        limit 1000   
+        )
+    )
+    group by variation_name, session_id, event_name
+   
+) as a
+group by variation_name, event_name
